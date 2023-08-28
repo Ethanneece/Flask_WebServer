@@ -4,6 +4,8 @@ import matplotlib
 matplotlib.use('Agg') # Fixes threading issue when creating a plot. 
 import matplotlib.pyplot as plt
 
+import numpy
+
 import os.path
 
 
@@ -24,82 +26,45 @@ IMAGE_DIRECTORY = 'images'
 IMAGE_NAME = 'output-1.png'
 
 # Hold data in these variables so we don't recalculate each time a request is made. 
-CONCENTRATION_SUM = -1
-CONCENTRATION_STD = -1
-CONCENTRATION_MEAN = -1
-CONCENTRATION_IMAGE_PATH = ''
+isSetUp = False
+concentrationSum = -1
+concentrationSTD = -1
+concentrationMean = -1
+concentrationImagePath = ''
 
 # Read the data from the csv file into a string. 
 def __getData():
 
-    #opening csv file containing our data.
-    file = open(CSV_FILE)
-
-    #skipping first line which contains header data.
-    data = file.readlines()[1:]
-    file.close() 
-
-    return data
+    return numpy.loadtxt(CSV_FILE, skiprows=1, delimiter=',')
 
 
 # calculates the mean of the concentration column in the csv file. 
-def __calculateMean():
+def __calculateMean(data):
     
-    data = __getData()
-
-    sum = 0 
-    dataPoints = 0 
-
-    for row in data: 
-        csvSplit = row.strip().split(',')
-        sum += float(csvSplit[CONCENTRATION_COLUMN])
-        dataPoints += 1
-    
-    return sum / dataPoints
+    return numpy.mean(data, axis=0)[CONCENTRATION_COLUMN]
 
 # Calculates the sum of the concentration column of the csv file. 
-def __calculateSum():
-
-    data = __getData()
-
-    sum = 0 
-    for row in data: 
-        csvSplit = row.strip().split(',')
-        sum += float(csvSplit[CONCENTRATION_COLUMN])
+def __calculateSum(data):
     
-    return sum
+    return numpy.sum(data, axis=0)[CONCENTRATION_COLUMN]
 
 # calculates the standard devation of the concentration column in the csv file. 
-def __calculateStd():
+def __calculateStd(data):
 
-    data = __getData()
-
-    mean = __calculateMean()
-
-    sd = 0
-    dataPoints = -1
-    for row in data:
-        csvSplit = row.strip().split(',')
-        sd += pow(float(csvSplit[CONCENTRATION_COLUMN]) - mean, 2)
-        dataPoints += 1
-    
-    sd = math.sqrt(sd / (dataPoints))
-    return sd
+    # Calculating based on sample standard deviation. 
+    return numpy.std(data, axis=0, ddof=1)[CONCENTRATION_COLUMN]
 
 # Creates image of 3-d plot of the csv Data. 
-def __createImage():
+def __createImage(data):
     
     fig = plt.figure()
     ax = fig.add_subplot(projection='3d')
 
-    data = __getData()
-
     for row in data:
-        csvSplit = row.strip().split(',')
 
-        xs = float(csvSplit[X_COLUMN])
-        ys = float(csvSplit[Y_COLUMN])
-        concentration = float(csvSplit[CONCENTRATION_COLUMN])
+        xs = row[X_COLUMN]
+        ys = row[Y_COLUMN]
+        concentration = row[CONCENTRATION_COLUMN]
 
         ax.scatter(xs, ys, concentration, marker='x')
     
@@ -115,42 +80,57 @@ def __createImage():
 # Getters 
 
 def getSum():
-    global CONCENTRATION_SUM
-    if CONCENTRATION_SUM == -1:
-        CONCENTRATION_SUM = __calculateSum()
+    global concentrationSum
+    global isSetUp
     
-    return CONCENTRATION_SUM
+    if isSetUp:
+        return concentrationSum
+    
+    return "Calculations we're not set up."
 
 def getMean():
-    global CONCENTRATION_MEAN
-    if CONCENTRATION_MEAN == -1:
-        CONCENTRATION_MEAN = __calculateMean()
-
-    return CONCENTRATION_MEAN
+    global concentrationMean
+    global isSetUp
+    
+    if isSetUp:
+        return concentrationMean
+    
+    return "Calculations we're not set up."
 
 def getStd():
-    global CONCENTRATION_STD
-    if CONCENTRATION_STD == -1: 
-        CONCENTRATION_STD = __calculateStd()
-
-    return CONCENTRATION_STD
+    global concentrationSTD
+    global isSetUp
+    
+    if isSetUp:
+        return concentrationSTD
+    
+    return "Calculations we're not set up."
 
 def getImagePath():
-    global CONCENTRATION_IMAGE_PATH
-    if not os.path.isfile(CONCENTRATION_IMAGE_PATH):
-        CONCENTRATION_IMAGE_PATH = __createImage()
+    global concentrationImagePath
+    global isSetUp
     
-    return CONCENTRATION_IMAGE_PATH
+    if isSetUp:
+        return concentrationImagePath
+    
+    return "Calculations we're not set up."
+    
+    
 
 def setUp():
-    global CONCENTRATION_IMAGE_PATH
-    CONCENTRATION_IMAGE_PATH = __createImage()
 
-    global CONCENTRATION_STD
-    CONCENTRATION_STD = __calculateStd()
+    data = __getData()
+    global concentrationImagePath
+    concentrationImagePath = __createImage(data)
 
-    global CONCENTRATION_SUM
-    CONCENTRATION_SUM = __calculateSum()
+    global concentrationSTD
+    concentrationSTD = __calculateStd(data)
+
+    global concentrationSum
+    concentrationSum = __calculateSum(data)
     
-    global CONCENTRATION_MEAN
-    CONCENTRATION_MEAN = __calculateMean()
+    global concentrationMean
+    concentrationMean = __calculateMean(data)
+
+    global isSetUp
+    isSetUp = True
