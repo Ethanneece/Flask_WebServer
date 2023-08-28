@@ -72,6 +72,10 @@ def __createImage(data):
     ax.set_ylabel('Y Label')
     ax.set_zlabel('Concentration')
 
+    # Checking if directory exist. 
+    if not os.path.isdir(IMAGE_DIRECTORY):
+        os.mkdir(IMAGE_DIRECTORY)
+
     imageFilePath = os.path.join(IMAGE_DIRECTORY, IMAGE_NAME)
     plt.savefig(imageFilePath)
     

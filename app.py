@@ -4,6 +4,8 @@ from flask import send_file
 import calculations
 import logging
 
+import os
+
 app = Flask(__name__)
 
 # displays info logs when running. 
@@ -41,4 +43,6 @@ def getImage():
 # Main Method
 if __name__ == '__main__':
     calculations.setUp()
-    app.run()
+
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port)

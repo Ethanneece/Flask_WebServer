@@ -21,4 +21,7 @@ Returns the standard deviation of the concentration in the csv file.
 ### get-image
 Returns a png image visualization of the concentraiton in the csv file. 
 
+## Docker Image
+Image that runs the program genereated from the Dockerfile in this repository. 
 
+https://hub.docker.com/r/gotoe11/flask-docker
